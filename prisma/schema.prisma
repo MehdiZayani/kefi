@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Notification {
+  id          String           @id
+  type        NotificationType
+  title       String
+  description String
+  date        DateTime         @default(now())
+  isRead      Boolean          @default(false)
+  employeeId  String
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime
+  Employee    Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Problem {
+  id           String          @id
+  title        String
+  description  String
+  status       ProblemStatus   @default(OUVERT)
+  priority     ProblemPriority @default(MOYENNE)
+  departmentId String
+  employeeId   String
+  response     String?
+  resolvedAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  Department   Department      @relation(fields: [departmentId], references: [id])
+  Employee     Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Department {
+  id           String     @id
+  name         String     @unique
+  description  String?
+  contactEmail String?
+  contactPhone String?
+  location     String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime
+  Employee     Employee[]
+  Problem      Problem[]
+}
+
+model Employee {
+  id           String         @id
+  matricule    String         @unique
+  firstName    String
+  lastName     String
+  email        String         @unique
+  password     String
+  phone        String?
+  position     String?
+  departmentId String
+  photoUrl     String?
+  dateEmbauche DateTime?
+  isActive     Boolean        @default(true)
+  role         Role           @default(USER)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime
+  Department   Department     @relation(fields: [departmentId], references: [id])
+  performance  Int            @default(92)
+  site          String?        @default("Sousse, Tunisie")
+  Notification  Notification[]
+  Problem       Problem[]
+  Idea          Idea[]
+}
+
+model Idea {
+  id          String   @id
+  category    String
+  content     String
+  employeeId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  ABSENCE
+  RETARD
+  REMARQUE
+  ALERT
+}
+
+enum ProblemPriority {
+  BASSE
+  MOYENNE
+  HAUTE
+  URGENTE
+}
+
+enum ProblemStatus {
+  OUVERT
+  EN_COURS
+  RESOLU
+  FERME
+}
+
+enum Role {
+  USER
+  ADMIN
+}

@@ -5,9 +5,9 @@ import {
   Users,
   Clock,
   AlertTriangle,
-  TrendingUp,
   Bell,
   ChevronRight,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -23,6 +23,11 @@ export default async function TableauDeBordPage() {
     where: { id: session.user.id },
     include: {
       Notification: { orderBy: { date: "desc" }, take: 3 },
+      Problem: {
+        orderBy: { updatedAt: "desc" },
+        take: 5,
+        include: { Department: true },
+      },
     },
   });
 
@@ -66,13 +71,6 @@ export default async function TableauDeBordPage() {
       color: "#ef4444",
       bg: "#fef2f2",
     },
-    {
-      label: "Performance",
-      value: `${employee.performance}%`,
-      icon: TrendingUp,
-      color: "#10b981",
-      bg: "#ecfdf5",
-    },
   ];
 
   const typeLabelMap: Record<string, string> = {
@@ -102,7 +100,7 @@ export default async function TableauDeBordPage() {
       </p>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-5 mb-8">
+      <div className="grid grid-cols-3 gap-5 mb-8">
         {stats.map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className="bg-white rounded-2xl p-5 shadow-sm">
             <p
@@ -131,6 +129,75 @@ export default async function TableauDeBordPage() {
           </div>
         ))}
       </div>
+
+      {/* Mes Tickets */}
+      {employee.Problem.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm mb-5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <MessageSquare size={16} style={{ color: PRIMARY }} />
+              <span className="font-semibold text-sm" style={{ color: "#111827" }}>
+                Mes Tickets
+              </span>
+            </div>
+            <Link
+              href="/signaler-probleme"
+              className="text-xs font-semibold uppercase tracking-wide"
+              style={{ color: PRIMARY }}
+            >
+              Nouveau ticket
+            </Link>
+          </div>
+          <div className="flex flex-col gap-3">
+            {employee.Problem.map((p) => {
+              const statusColor: Record<string, string> = {
+                OUVERT: "#ef4444",
+                EN_COURS: "#f59e0b",
+                RESOLU: "#10b981",
+                FERME: "#6b7280",
+              };
+              const statusLabel: Record<string, string> = {
+                OUVERT: "Ouvert",
+                EN_COURS: "En cours",
+                RESOLU: "Résolu",
+                FERME: "Fermé",
+              };
+              const color = statusColor[p.status] ?? "#6b7280";
+              return (
+                <div
+                  key={p.id}
+                  className="rounded-xl p-4"
+                  style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb" }}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: "#111827" }}>
+                        {p.title}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">{p.Department.name}</p>
+                    </div>
+                    <span
+                      className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: color + "20", color }}
+                    >
+                      {statusLabel[p.status]}
+                    </span>
+                  </div>
+                  {p.response && (
+                    <div
+                      className="mt-3 p-3 rounded-lg text-xs"
+                      style={{ backgroundColor: "#ecfdf5", borderLeft: "3px solid #10b981" }}
+                    >
+                      <p className="font-semibold text-green-700 mb-1">Réponse de l&apos;administration :</p>
+                      <p className="text-green-800">{p.response}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-5">
         {/* Notifications récentes */}

@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import { Shield, MapPin, Calendar, Camera, Pencil } from "lucide-react";
 
 const PRIMARY = "#1e3a8a";
@@ -6,14 +8,17 @@ const PRIMARY = "#1e3a8a";
 export const dynamic = "force-dynamic";
 
 export default async function ProfilPage() {
-  const employee = await prisma.employee.findFirst({
-    orderBy: { createdAt: "asc" },
+  const session = await auth();
+  if (!session) redirect("/login");
+
+  const employee = await prisma.employee.findUnique({
+    where: { id: session.user.id },
     include: { Department: true },
   });
 
   if (!employee) {
     return (
-      <div className="text-gray-500 text-center py-20">Aucun employé trouvé.</div>
+      <div className="text-gray-500 text-center py-20">Employé introuvable.</div>
     );
   }
 

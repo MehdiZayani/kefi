@@ -1,8 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+async function requireAdmin() {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") return null;
+  return session;
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireAdmin()) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
   const { id } = await params;
   const emp = await prisma.employee.findUnique({ where: { id } });
   if (!emp) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -12,6 +22,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireAdmin()) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
   const { id } = await params;
   const body = await req.json();
   const {
@@ -39,6 +52,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!await requireAdmin()) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
   const { id } = await params;
   await prisma.employee.delete({ where: { id } });
   return NextResponse.json({ ok: true });

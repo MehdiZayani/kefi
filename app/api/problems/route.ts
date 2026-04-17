@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
@@ -10,6 +11,11 @@ const SERVICE_DEPT_MAP: Record<string, string> = {
 };
 
 export async function POST(req: NextRequest) {
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { serviceId, title, description, priority } = body as {
     serviceId: string;
@@ -22,11 +28,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
   }
 
-  const employee = await prisma.employee.findFirst({
-    orderBy: { createdAt: "asc" },
+  const employee = await prisma.employee.findUnique({
+    where: { id: session.user.id },
   });
   if (!employee) {
-    return NextResponse.json({ error: "No employee found" }, { status: 404 });
+    return NextResponse.json({ error: "Employé introuvable" }, { status: 404 });
   }
 
   const deptName = SERVICE_DEPT_MAP[serviceId] ?? serviceId;

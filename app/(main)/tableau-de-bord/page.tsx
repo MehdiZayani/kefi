@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 import {
   Users,
   Clock,
@@ -14,8 +16,11 @@ const PRIMARY = "#1e3a8a";
 export const dynamic = "force-dynamic";
 
 export default async function TableauDeBordPage() {
-  const employee = await prisma.employee.findFirst({
-    orderBy: { createdAt: "asc" },
+  const session = await auth();
+  if (!session) redirect("/login");
+
+  const employee = await prisma.employee.findUnique({
+    where: { id: session.user.id },
     include: {
       Notification: { orderBy: { date: "desc" }, take: 3 },
     },
@@ -24,10 +29,7 @@ export default async function TableauDeBordPage() {
   if (!employee) {
     return (
       <div className="text-gray-500 text-center py-20">
-        Aucun employé trouvé.{" "}
-        <Link href="/api/seed" className="text-blue-600 underline">
-          Initialiser la BDD
-        </Link>
+        Employé introuvable.
       </div>
     );
   }

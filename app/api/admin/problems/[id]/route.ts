@@ -1,10 +1,20 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
+
+async function requireAdmin() {
+  const session = await auth();
+  if (!session || session.user.role !== "ADMIN") return null;
+  return session;
+}
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!await requireAdmin()) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
   const { id } = await params;
   const problem = await prisma.problem.findUnique({
     where: { id },
@@ -18,6 +28,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!await requireAdmin()) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
   const { id } = await params;
   const body = await req.json();
   const { status, response } = body as { status: string; response: string };

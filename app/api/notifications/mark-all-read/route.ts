@@ -1,14 +1,15 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const employee = await prisma.employee.findFirst({
-    orderBy: { createdAt: "asc" },
-  });
-  if (!employee) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const session = await auth();
+  if (!session) {
+    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+  }
 
   await prisma.notification.updateMany({
-    where: { employeeId: employee.id },
+    where: { employeeId: session.user.id },
     data: { isRead: true },
   });
   return NextResponse.json({ ok: true });

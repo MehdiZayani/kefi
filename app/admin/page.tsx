@@ -28,7 +28,7 @@ export default async function AdminDashboard() {
   });
 
   const stats = [
-    { label: "Employés total", value: employees, icon: Users, color: "#3b82f6", bg: "#eff6ff", href: "/admin/employes" },
+    { label: "Employés", value: employees, icon: Users, color: "#3b82f6", bg: "#eff6ff", href: "/admin/employes" },
     { label: "Problèmes ouverts", value: problemsByStatus["OUVERT"] ?? 0, icon: AlertTriangle, color: "#ef4444", bg: "#fef2f2", href: "/admin/problemes" },
     { label: "Notifs non lues", value: notifications, icon: Bell, color: "#f59e0b", bg: "#fffbeb", href: "/admin/notifications" },
     { label: "Idées soumises", value: ideas, icon: Lightbulb, color: "#10b981", bg: "#ecfdf5", href: "/admin/idees" },

@@ -24,14 +24,8 @@ export default function LoginPage() {
     if (res?.error) {
       setError("Email ou mot de passe incorrect.");
     } else {
-      // Redirect based on role — check session
-      const sessionRes = await fetch("/api/auth/session");
-      const session = await sessionRes.json();
-      if (session?.user?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/tableau-de-bord");
-      }
+      router.push("/");
+      router.refresh();
     }
   }
 
